@@ -6,8 +6,8 @@ ini_set('display_errors', 1);
 
 $host = 'localhost';
 $db   = 'draftosaurio';
-$user = 'root';
-$pass = '';
+$user = 'adminDB';
+$pass = '123';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

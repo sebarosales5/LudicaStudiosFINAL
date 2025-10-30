@@ -5,9 +5,8 @@ header('Content-Type: application/json');
 // Configuración de base de datos
 $host = 'localhost';
 $db = 'draftosaurio';
-$user = 'root';
-$pass = '';
-
+$user = 'adminDB';
+$pass = '123';
 // Conexión a la base
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

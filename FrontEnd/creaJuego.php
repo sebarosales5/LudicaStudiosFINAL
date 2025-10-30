@@ -13,7 +13,7 @@
   <div class="container-fluid">
     <a class="navbar-brand" href="ludica.php">Ludica Studios</a>
     </button>
-          <img src="../Otros/fotos/dinosaurioperoacolor.jpg" alt="Usuario" width="40" height="40" class="rounded-circle ms-auto" onclick="window.location.href='index.php'">
+          <img src="../Otros/fotos/dinosaurioperoacolor.jpg" alt="Usuario" width="40" height="40" class="rounded-circle ms-auto" onclick="window.location.href='../index.php'">
     </div>
   </div>
 </nav>

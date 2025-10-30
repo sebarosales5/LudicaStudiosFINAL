@@ -3,8 +3,8 @@ session_start();
 
 $host = 'localhost';
 $db = 'draftosaurio';
-$user = 'root';
-$pass = '';
+$user = 'adminDB';
+$pass = '123';
 
 // Conexión a la base
 $conn = new mysqli($host, $user, $pass, $db);
@@ -13,7 +13,8 @@ if ($conn->connect_error) die("Conexión fallida: ".$conn->connect_error);
 // Validar envío del formulario
 if (empty($_POST['correo']) || empty($_POST['contrasena'])) {
     $_SESSION['message'] = "Completa todos los campos.";
-    header("Location: ../index.php");
+    $_SESSION['error_type'] = 'login';
+    header("Location: ../index.php?error=1");
     exit();
 }
 
@@ -40,16 +41,19 @@ if ($result && $result->num_rows === 1) {
             'rol' => $usuario['Rol']
         ];
         $_SESSION['message'] = "Bienvenido ".$usuario['Nombre_jugador'];
+            $_SESSION['success'] = true;
         header("Location: ../index.php");
         exit();
     } else {
         $_SESSION['message'] = "Correo o contraseña incorrecta";
-        header("Location: ../index.php");
+        $_SESSION['error_type'] = 'login';
+        header("Location: ../index.php?error=1");
         exit();
     }
 } else {
     $_SESSION['message'] = "Correo o contraseña incorrecta";
-    header("Location: ../index.php");
+    $_SESSION['error_type'] = 'login';
+    header("Location: ../index.php?error=1");
     exit();
 }
 

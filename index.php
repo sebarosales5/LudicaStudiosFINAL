@@ -4,8 +4,8 @@ session_start();
 <?php
 $host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'root';
-$pass = '';
+$user = 'adminDB';
+$pass = '123';
 
 $conn = new mysqli($host, $user, $pass, $db);
 
@@ -31,6 +31,29 @@ if ($conn->connect_error) {
     <title>Draftosaurus</title>
 </head>
     <body>
+
+     <!-- Toast container para notificaciones de éxito -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 2000;">
+       <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+         <div class="d-flex">
+           <div class="toast-body" id="toastMessage">
+             <!-- El mensaje se insertará aquí dinámicamente -->
+           </div>
+           <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+         </div>
+       </div>
+     </div>
+
+   <?php
+   // Inyección global: si hubo éxito (login/registro), preparar variables JS para mostrar toast
+   if (isset($_SESSION['success']) && $_SESSION['success'] === true && isset($_SESSION['message'])) {
+       $successMessage = $_SESSION['message'];
+       echo "<script>var showSuccessToast = true; var successMessage = " . json_encode($successMessage) . ";</script>";
+       // Consumir los mensajes de éxito aquí para no interferir con el flujo de errores en el modal
+       unset($_SESSION['success']);
+       unset($_SESSION['message']);
+   }
+   ?>
 
    <!-- Boton de costado --> 
 <nav class="navbar navbar-light bg-light">
@@ -86,7 +109,12 @@ if ($conn->connect_error) {
 
                 <?php
                 if (isset($_SESSION['message']) && $_SESSION['message']) {
-                  printf('<div class="alert alert-info m-2">%s</div>', $_SESSION['message']);
+                  printf('<div class="alert alert-info m-2" id="server-message">%s</div>', $_SESSION['message']);
+                  $errorType = isset($_SESSION['error_type']) ? $_SESSION['error_type'] : '';
+                  if ($errorType) {
+                    echo "<script>var errorType = '{$errorType}';</script>";
+                    unset($_SESSION['error_type']);
+                  }
                   unset($_SESSION['message']);
                 }
                 ?>
@@ -207,7 +235,7 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
          <p class="pt-3 px-4 fs-5">Ludica Studios trabaja para que los mejores juegos de mesa estén a tu alcance, ¡Sin instalaciones y sin gastos!</p>
       </div>
       <div class="col-sm-5 py-4 px-3 col-12"> 
-        <p class="text-center"><img src="Otros/fotos/Logo_color.jpg" class="rounded" style="width: 200px; height: 150px;" alt="Ejemplo"></p>
+        <p class="text-center"><img src="Otros/fotos/Logo_color.png" class="rounded" alt="Ejemplo"></p>
         <p class="text-center"><button type="button" class="btn btn-outline-success" onclick="window.location.href='FrontEnd/ludica.php'">¡Visita nuestra web!</button></p>
       </div>
     </div>
@@ -337,7 +365,7 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
     <div class="row">
       <div class="col-lg-3 mb-3">
         <a class="d-inline-flex align-items-center mb-2 link-dark text-decoration-none" href="FrontEnd/ludica.php" aria-label="Bootstrap">
-          <img src="Otros/fotos/Logo_color.jpg" alt="Usuario" width="40" height="40" class="rounded-circle me-auto">
+          <img src="Otros/fotos/Logo_color.png" alt="Usuario" width="40" height="40" class="rounded-circle me-auto">
           <span class="fs-5 ps-4">Ludica Studios</span>
 
         </a>
@@ -398,6 +426,7 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
 </footer>
     <!--  Bootstrap Bundle with Popper -->
     <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="FrontEnd/index.js"></script>
     </body>
     
 </html>
