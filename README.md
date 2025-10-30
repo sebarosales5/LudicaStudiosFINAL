@@ -1,0 +1,2 @@
+# LudicaStudios
+Es necesario para la ejecución de la página web que tenga instalado XAMPP, que agregue la carpeta "LudicaStudios" en la carpeta htdocs dentro de la carpeta Xampp y que, por ultimo, ejecute en el buscador el link http://localhost/LudicaStudios/ProyectoFinalPagina/FrontEnd/

@@ -1,0 +1,10 @@
+[13-Sep-2025 00:36:53 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Cannot add or update a child row: a foreign key constraint fails (`draftosaurio`.`tablero`, CONSTRAINT `tablero_ibfk_1` FOREIGN KEY (`Id_jugador`) REFERENCES `juega` (`Id_jugador`)) in C:\xampp\htdocs\LudicaStudios\ProyectoFinalPagina\BackEnd\verificar_jugadores.php:55
+Stack trace:
+#0 C:\xampp\htdocs\LudicaStudios\ProyectoFinalPagina\BackEnd\verificar_jugadores.php(55): mysqli_stmt->execute()
+#1 {main}
+  thrown in C:\xampp\htdocs\LudicaStudios\ProyectoFinalPagina\BackEnd\verificar_jugadores.php on line 55
+[13-Sep-2025 00:38:35 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Cannot add or update a child row: a foreign key constraint fails (`draftosaurio`.`tablero`, CONSTRAINT `tablero_ibfk_1` FOREIGN KEY (`Id_jugador`) REFERENCES `juega` (`Id_jugador`)) in C:\xampp\htdocs\LudicaStudios\ProyectoFinalPagina\BackEnd\verificar_jugadores.php:87
+Stack trace:
+#0 C:\xampp\htdocs\LudicaStudios\ProyectoFinalPagina\BackEnd\verificar_jugadores.php(87): mysqli_stmt->execute()
+#1 {main}
+  thrown in C:\xampp\htdocs\LudicaStudios\ProyectoFinalPagina\BackEnd\verificar_jugadores.php on line 87
