@@ -280,7 +280,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="window.location.href='index.php'">Volver al inicio</button>
+            <button type="button" class="btn btn-primary" onclick="window.location.href='../index.php'">Volver al inicio</button>
           </div>
         </div>
       </div>
