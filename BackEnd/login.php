@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$host = 'localhost';
+$host = '192.168.1.23';
 $db = 'draftosaurio';
 $user = 'adminDB';
 $pass = 'Admin1234_';

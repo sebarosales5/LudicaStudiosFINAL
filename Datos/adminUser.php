@@ -7,7 +7,7 @@ if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['rol']) || $_SES
 }
 ?>
 <?php
-$host = 'localhost';
+$host = '192.168.1.23';
 $db = 'draftosaurio';
 $user = 'adminDB';
 $pass = 'Admin1234_';

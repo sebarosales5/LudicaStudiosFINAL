@@ -4,7 +4,7 @@ header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$host = 'localhost';
+$host = '192.168.1.23';
 $db = 'draftosaurio';
 $user = 'adminDB';
 $pass = 'Admin1234_';

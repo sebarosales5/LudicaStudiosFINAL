@@ -2,7 +2,7 @@
 session_start();
 ?>
 <?php
-$host = 'localhost'; // o IP del servidor de BD
+$host = '192.168.1.23'; // o IP del servidor de BD
 $db = 'draftosaurio';
 $user = 'adminDB';
 $pass = 'Admin1234_';
