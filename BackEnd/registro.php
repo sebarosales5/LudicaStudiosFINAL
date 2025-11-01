@@ -4,7 +4,7 @@ session_start();
 $host = 'localhost';
 $db = 'draftosaurio';
 $user = 'adminDB';
-$pass = '123';
+$pass = 'Admin1234_';
 
 $conn = new mysqli($host,$user,$pass,$db);
 if($conn->connect_error) die("Conexión fallida: ".$conn->connect_error);

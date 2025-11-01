@@ -87,6 +87,6 @@ Id_turno int(2) not null,
 Id_usuario int(6) not null,
 Id_partida int(6) not null,
 foreign key (Id_turno) references turno (Id_turno),
-foreign key (Id_jugador) references juega (Id_usuario),
+foreign key (Id_usuario) references juega (Id_usuario),
 foreign key (Id_partida) references juega (Id_partida)
 ); 

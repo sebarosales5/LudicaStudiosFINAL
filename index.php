@@ -5,7 +5,7 @@ session_start();
 $host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
 $user = 'adminDB';
-$pass = '123';
+$pass = 'Admin1234_';
 
 $conn = new mysqli($host, $user, $pass, $db);
 

@@ -6,7 +6,8 @@ header('Content-Type: application/json');
 $host = 'localhost';
 $db = 'draftosaurio';
 $user = 'adminDB';
-$pass = '123';
+$pass = 'Admin1234_';
+
 // Conexión a la base
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

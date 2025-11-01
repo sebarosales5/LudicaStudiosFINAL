@@ -5,9 +5,9 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 $host = 'localhost';
-$db   = 'draftosaurio';
+$db = 'draftosaurio';
 $user = 'adminDB';
-$pass = '123';
+$pass = 'Admin1234_';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {
