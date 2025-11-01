@@ -10,7 +10,7 @@ if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['rol']) || $_SES
 $host = 'mysql_db';
 $db = 'draftosaurio';
 $user = 'adminDB';
-$pass = 'Admin1234_';
+$pass = '123';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) die("Conexión fallida: ".$conn->connect_error);
