@@ -7,7 +7,7 @@ ini_set('display_errors', 1);
 $host = 'mysql_db';
 $db = 'draftosaurio';
 $user = 'adminDB';
-$pass = 'Admin1234_';
+$pass = '123';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

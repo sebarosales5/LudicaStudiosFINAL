@@ -4,7 +4,7 @@ session_start();
 $host = 'mysql_db';
 $db = 'draftosaurio';
 $user = 'adminDB';
-$pass = 'Admin1234_';
+$pass = '123';
 
 // Conexión a la base
 $conn = new mysqli($host, $user, $pass, $db);
