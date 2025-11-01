@@ -3,7 +3,7 @@ session_start();
 header('Content-Type: application/json');
 
 // Configuración de base de datos
-$host = '192.168.1.23';
+$host = 'mysql_db';
 $db = 'draftosaurio';
 $user = 'adminDB';
 $pass = 'Admin1234_';
