@@ -8,10 +8,10 @@ if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['id'])) {
     exit();
 }
 
-$host = 'localhost';
+$host = 'db'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'root';
-$pass = '';
+$user = 'adminDB';
+$pass = '123';
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

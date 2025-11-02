@@ -3,10 +3,10 @@ session_start();
 header('Content-Type: application/json');
 
 // Configuración de base de datos
-$host = 'localhost'; // o IP del servidor de BD
+$host = 'db'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'root';
-$pass = '';
+$user = 'adminDB';
+$pass = '123';
 
 
 // Conexión a la base
