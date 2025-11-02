@@ -4,10 +4,11 @@ header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-$host = 'mysql_db';
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
+
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) {

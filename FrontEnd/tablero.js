@@ -222,8 +222,15 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log('Dragover en zona del jugador', playerId);
           
           if (activePlayerIndex === playerId) {
-            // Restringir por dado: si no se tiró o la zona no está habilitada, bloquear
-            if (!diceRolled || !checkDiceAllowsZone(playerId, zona)) {
+            const bypass = (playerId === dieHolderIndex); // El poseedor del dado ignora la restricción
+            // Requerir que el dado haya sido tirado para todos
+            if (!diceRolled) {
+              e.dataTransfer.dropEffect = 'none';
+              zona.classList.add('zona-invalida');
+              return;
+            }
+            // Si no es el poseedor del dado, aplicar restricción de cara
+            if (!bypass && !checkDiceAllowsZone(playerId, zona)) {
               e.dataTransfer.dropEffect = 'none';
               zona.classList.add('zona-invalida');
               return;
@@ -259,7 +266,12 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log('Dragenter en zona del jugador', playerId);
           
           if (activePlayerIndex === playerId) {
-            if (!diceRolled || !checkDiceAllowsZone(playerId, zona)) {
+            const bypass = (playerId === dieHolderIndex);
+            if (!diceRolled) {
+              zona.classList.add('zona-invalida');
+              return;
+            }
+            if (!bypass && !checkDiceAllowsZone(playerId, zona)) {
               zona.classList.add('zona-invalida');
               return;
             }
@@ -282,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
           zona.classList.remove('zona-invalida');
         });
 
-        zona.addEventListener('drop', e => {
+        zona.addEventListener('drop', async e => {
           e.preventDefault();
           console.log('Intento de drop en zona del jugador', playerId);
 
@@ -291,11 +303,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
 
-          // Restringir por dado
-          if (!diceRolled || !checkDiceAllowsZone(playerId, zona)) {
+          // Restringir por dado (el poseedor del dado ignora la restricción)
+          const bypass = (playerId === dieHolderIndex);
+          if (!diceRolled || (!bypass && !checkDiceAllowsZone(playerId, zona))) {
             console.log('Drop cancelado - la zona no está habilitada por el dado');
             return;
           }
+
+          let startedNewRound = false; // bandera para controlar el salto de turno al iniciar nueva ronda
 
           // Verificar si la zona está restringida y ya tiene un dinosaurio o si Pradera está llena
           const isSingleOccupancy = zona.id.endsWith('-zona2') || zona.id.endsWith('-zona3');
@@ -386,8 +401,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
 
-          // Re-renderizar el pool del jugador para que los ids e índices queden consistentes
+          // (Modo 2 jugadores) El descarte ya no es automático: se solicitará al jugador elegir qué descartar.
+
+          // Re-renderizar primero para que el dino recién colocado ya no aparezca en la mano
           generatePoolAndRenderForPlayer(playerId);
+          // En modo 2 jugadores: pedir descarte manual (selección + confirmar) antes de continuar
+          if (typeof NUM_PLAYERS !== 'undefined' && NUM_PLAYERS === 2) {
+            await promptDiscardForPlayer(playerId);
+          }
 
           // Actualizar estadísticas y contadores
           updatePlayerStats(playerId);
@@ -416,9 +437,16 @@ document.addEventListener('DOMContentLoaded', () => {
               showDiceToast(dieHolderIndex, '-', metaInfo);
             } catch (e) { /* noop */ }
 
+            // La nueva ronda comienza en el poseedor del dado
+            activePlayerIndex = dieHolderIndex;
+            startedNewRound = true;
+            updateGameState();
+
+            // En 2 jugadores, cada colocación descarta otro dino => con 6 dinos iniciales se hacen 3 colocaciones.
+            const placementsNeeded = (NUM_PLAYERS === 2) ? Math.ceil(DINOS_PER_DISTRIBUTION / 2) : DINOS_PER_DISTRIBUTION;
             let allPlayersFinished = true;
             for (let i = 0; i < NUM_PLAYERS; i++) {
-              if ((totalPlacements.get(i) || 0) < DINOS_PER_DISTRIBUTION) { allPlayersFinished = false; break; }
+              if ((totalPlacements.get(i) || 0) < placementsNeeded) { allPlayersFinished = false; break; }
             }
             if (allPlayersFinished && sharedPool.length > 0) distributeNewDinosaurs();
           }
@@ -433,9 +461,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Pasar al siguiente jugador después de un pequeño retraso
           setTimeout(() => {
-            nextTurn();
-            const tabElement = document.querySelector(`#player${activePlayerIndex}-tab`);
-            if (tabElement) { const tab = new bootstrap.Tab(tabElement); tab.show(); }
+            if (startedNewRound) {
+              // No avanzar turno: la nueva ronda inicia en el poseedor del dado
+              const tabElement = document.querySelector(`#player${dieHolderIndex}-tab`);
+              if (tabElement) { const tab = new bootstrap.Tab(tabElement); tab.show(); }
+            } else {
+              nextTurn();
+              const tabElement = document.querySelector(`#player${activePlayerIndex}-tab`);
+              if (tabElement) { const tab = new bootstrap.Tab(tabElement); tab.show(); }
+            }
           }, 500);
         });
       });
@@ -491,6 +525,11 @@ function injectDiceStylesOnce() {
     .zona-dado-enabled { outline: 2px dashed #0d6efd; outline-offset: -2px; }
     .zona-dado-disabled { filter: grayscale(0.5); opacity: 0.6; }
     .dice-holder-badge { display:inline-block; }
+    /* Descarte 2 jugadores */
+    .discard-bar { font-size: 0.9rem; }
+    .discard-mode .dino { cursor: pointer; outline: 2px dashed #dc3545; outline-offset: -4px; }
+    .discard-mode .dino:hover { background: rgba(220, 53, 69, 0.08); }
+    .dino.discard-selected { box-shadow: 0 0 0 3px #dc3545 inset; }
   `;
   document.head.appendChild(style);
 }
@@ -505,7 +544,7 @@ function getDiceFaceMeta(face) {
     case 2: return { name: 'Llanura', description: 'Habilitadas: Lago (7), Bosque (2), Desierto (5), Costa (6)', zones: [7,2,5,6] };
     case 3: return { name: 'Baños', description: 'Habilitadas: Lago (7), Bosque (2), Río (3), Costa (6)', zones: [7,2,3,6] };
     case 4: return { name: 'Cafetería', description: 'Habilitadas: Lago (7), Montaña (4), Desierto (5), Pradera (1)', zones: [7,4,5,1] };
-    case 5: return { name: 'Recinto vacío', description: 'Sólo zonas vacías (sin dinosaurios)', zones: null };
+    case 5: return { name: 'Recinto vacío', description: 'Zonas vacías (sin dinosaurios) y Lago (7) siempre permitido', zones: null };
     case 6: return { name: '¡Cuidado con el T-Rex!', description: 'Sólo zonas que NO tengan un T-Rex. Podés jugar T-Rex si en esa zona no hay uno.', zones: null };
     default: return { name: 'Desconocido', description: '', zones: null };
   }
@@ -535,6 +574,8 @@ function checkDiceAllowsZone(playerId, zonaElem) {
     return meta.zones.includes(num);
   }
   if (face === 5) {
+    // Excepción: Lago (zona 7) siempre permitido aunque no esté vacío
+    if (num === 7) return true;
     return isZoneEmpty(zonaElem);
   }
   if (face === 6) {
@@ -549,7 +590,10 @@ function highlightZonesForDiceAllPlayers() {
   for (let p = 0; p < NUM_PLAYERS; p++) {
     const zonas = document.querySelectorAll(`[id^="player${p}-zona"]`);
     zonas.forEach(z => {
-      if (checkDiceAllowsZone(p, z)) {
+      if (p === dieHolderIndex) {
+        // El poseedor del dado puede jugar en cualquier zona
+        z.classList.add('zona-dado-enabled');
+      } else if (checkDiceAllowsZone(p, z)) {
         z.classList.add('zona-dado-enabled');
       } else {
         z.classList.add('zona-dado-disabled');
@@ -604,6 +648,84 @@ function setDiceButtonsState() {
     btn.disabled = !(i === dieHolderIndex && !diceRolled);
   }
   updateDiceUI();
+}
+
+// --------- UI de descarte manual para modo 2 jugadores ---------
+function promptDiscardForPlayer(playerId) {
+  return new Promise(resolve => {
+    try {
+      const pool = document.getElementById(`player${playerId}-dinoPool`);
+      if (!pool) return resolve();
+      const remaining = currentVisibleDinos.get(playerId) || [];
+      if (remaining.length === 0) return resolve();
+
+      // Activar modo descarte
+      pool.classList.add('discard-mode');
+
+      // Bloquear arrastre y habilitar selección por clic
+      const dinos = Array.from(pool.querySelectorAll('.dino'));
+      let selectedIndex = -1;
+
+      const blockDrag = ev => { ev.preventDefault(); ev.stopPropagation(); return false; };
+      const onClick = (idx) => () => {
+        selectedIndex = idx;
+        dinos.forEach((el, i) => el.classList.toggle('discard-selected', i === idx));
+        if (confirmBtn) confirmBtn.disabled = (selectedIndex < 0);
+      };
+
+      dinos.forEach((el, i) => {
+        el.addEventListener('dragstart', blockDrag);
+        el.addEventListener('click', onClick(i));
+      });
+
+      // Barra de confirmación
+      const bar = document.createElement('div');
+      bar.className = 'discard-bar alert alert-warning mt-2 py-2 px-3';
+      bar.innerHTML = `
+        <div class="d-flex align-items-center justify-content-between">
+          <span>Seleccioná un dinosaurio para descartar y confirmá.</span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-danger" id="player${playerId}-discard-confirm" disabled>Descartar</button>
+          </div>
+        </div>
+      `;
+      pool.parentElement.appendChild(bar);
+      const confirmBtn = document.getElementById(`player${playerId}-discard-confirm`);
+
+      const cleanup = () => {
+        dinos.forEach((el) => {
+          el.classList.remove('discard-selected');
+          el.removeEventListener('dragstart', blockDrag);
+          // Remover listeners de click: clonando el nodo se limpian todos, pero preferimos reemplazar re-render al final
+        });
+        pool.classList.remove('discard-mode');
+        if (bar && bar.parentElement) bar.parentElement.removeChild(bar);
+      };
+
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+          if (selectedIndex < 0) return;
+          // Remover el dino seleccionado del array de visibles
+          const arr = currentVisibleDinos.get(playerId) || [];
+          if (selectedIndex >= 0 && selectedIndex < arr.length) {
+            arr.splice(selectedIndex, 1);
+            currentVisibleDinos.set(playerId, arr);
+          }
+          // Re-render del pool para normalizar ids/índices
+          generatePoolAndRenderForPlayer(playerId);
+          cleanup();
+          resolve();
+        }, { once: true });
+      } else {
+        // Fallback: si no se encontró el botón por algún motivo, abortar silenciosamente
+        cleanup();
+        resolve();
+      }
+    } catch (e) {
+      console.warn('Fallo en promptDiscardForPlayer:', e);
+      resolve();
+    }
+  });
 }
 
 // Función para distribuir nuevos dinosaurios a todos los jugadores
@@ -977,7 +1099,11 @@ function updateDiceUI() {
     }
     if (faceEl) {
       if (diceRolled && activeDice) {
-        faceEl.textContent = `Restricción: ${activeDice.name}`;
+        if (i === dieHolderIndex) {
+          faceEl.textContent = `Sin restricción (posee el dado)`;
+        } else {
+          faceEl.textContent = `Restricción: ${activeDice.name}`;
+        }
       } else if (i === dieHolderIndex) {
         faceEl.textContent = 'Listo para tirar el dado';
       } else {

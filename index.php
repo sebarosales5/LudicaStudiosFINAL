@@ -1,11 +1,24 @@
 <?php
 session_start();
+// CSRF token universal para formularios de login/registro
+if (empty($_SESSION['csrf_token'])) {
+  try { $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); } catch (Exception $e) { $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32)); }
+}
+$__csrf = $_SESSION['csrf_token'];
+
+// Si se requiere captcha (por intentos fallidos), generar un desafío simple
+$__captcha_question = null;
+if (!empty($_SESSION['require_captcha']) && $_SESSION['require_captcha'] === true) {
+  $a = rand(1,9); $b = rand(1,9);
+  $_SESSION['captcha_answer'] = (string)($a + $b);
+  $__captcha_question = "¿Cuánto es $a + $b?";
+}
 ?>
 <?php
-$host = 'mysql_db'; // o IP del servidor de BD
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
 
 $conn = new mysqli($host, $user, $pass, $db);
 
@@ -64,12 +77,14 @@ if ($conn->connect_error) {
             href="#offcanvasExample" role="button" aria-controls="offcanvasExample">
       ☰
     </button>
+    <!-- Toggle idioma -->
+    <button id="langToggle" class="btn btn-outline-secondary me-2" type="button">EN</button>
     <img src="Otros/fotos/dinosaurioperoacolor.jpg" alt="Usuario" width="40" height="40" class="rounded-circle ms-auto">
 
     <!-- Offcanvas -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasExample" aria-labelledby="offcanvasExampleLabel">
       <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasExampleLabel">
+        <h5 class="offcanvas-title" id="offcanvasExampleLabel" data-i18n="<?php echo isset($_SESSION['usuario']) ? 'offcanvas.title.logged' : 'offcanvas.title.guest'; ?>">
           <?php echo isset($_SESSION['usuario']) ? "Bienvenido" : "Para continuar, registrate o inicia sesión."; ?>
         </h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -79,22 +94,24 @@ if ($conn->connect_error) {
         <?php if (isset($_SESSION['usuario'])): ?>
           <div class="d-flex align-items-center mb-3">
             <img src="Otros/fotos/dinosaurioperoacolor.jpg" alt="Usuario" width="40" height="40" class="rounded-circle me-2">
-            <span>👋 Hola, <?php echo htmlspecialchars($_SESSION['usuario']['nombre']); ?></span>
+            <span data-i18n="greeting.helloName" data-i18n-name="<?php echo htmlspecialchars($_SESSION['usuario']['nombre']); ?>">👋 Hola, <?php echo htmlspecialchars($_SESSION['usuario']['nombre']); ?></span>
           </div>
 
           <!-- Botón solo para admins -->
           <?php if (isset($_SESSION['usuario']['rol']) && $_SESSION['usuario']['rol'] === 'admin'): ?>
-            <a href="Datos/adminUser.php" class="btn btn-warning mb-3">Gestionar usuarios</a>
+            <a href="Datos/adminUser.php" class="btn btn-warning mb-3" data-i18n="nav.admin">Gestionar usuarios</a>
           <?php endif; ?>
 
-          <a href="BackEnd/logout.php" class="btn btn-outline-danger mb-3">Cerrar sesión</a>
+          <a href="FrontEnd/historial.php" class="btn btn-outline-primary mb-3" data-i18n="nav.history">Historial de partidas</a>
 
-        <?php else: ?>
-          <div>
-             ¡Ganarás acceso a nuestros otros proyectos, así como también a novedades de nuestra empresa y podrás jugar a los juegos que ya tenemos!
-          </div>
+          <a href="BackEnd/logout.php" class="btn btn-outline-danger mb-3" data-i18n="nav.logout">Cerrar sesión</a>
 
-          <button type="button" class="btn btn-primary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#formularioModal">
+      <?php else: ?>
+       <div data-i18n="offcanvas.guest.desc">
+         ¡Ganarás acceso a nuestros otros proyectos, así como también a novedades de nuestra empresa y podrás jugar a los juegos que ya tenemos!
+       </div>
+
+          <button type="button" class="btn btn-primary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#formularioModal" data-i18n="cta.auth">
             Registrate o Inicia Sesión
           </button>
 
@@ -103,7 +120,7 @@ if ($conn->connect_error) {
             <div class="modal-dialog">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="formularioModalLabel">Bienvenido</h5>
+                  <h5 class="modal-title" id="formularioModalLabel" data-i18n="modal.title">Bienvenido</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
 
@@ -121,43 +138,51 @@ if ($conn->connect_error) {
 
                 <ul class="nav nav-tabs" id="authTab" role="tablist">
                   <li class="nav-item">
-                    <button class="nav-link active" id="registro-tab" data-bs-toggle="tab" data-bs-target="#registro" type="button" role="tab">Registrarse</button>
+                    <button class="nav-link active" id="registro-tab" data-bs-toggle="tab" data-bs-target="#registro" type="button" role="tab" data-i18n="tabs.register">Registrarse</button>
                   </li>
                   <li class="nav-item">
-                    <button class="nav-link" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Iniciar sesión</button>
+                    <button class="nav-link" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab" data-i18n="tabs.login">Iniciar sesión</button>
                   </li>
                 </ul>
 
                 <div class="tab-content p-3">
                   <div class="tab-pane fade show active" id="registro" role="tabpanel">
                     <form action="BackEnd/registro.php" method="POST">
+                      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($__csrf); ?>">
                       <div class="mb-3">
-                        <label class="form-label">Nombre</label>
+                        <label class="form-label" data-i18n="form.name">Nombre</label>
                         <input type="text" class="form-control" name="nombre" required>
                       </div>
                       <div class="mb-3">
-                        <label class="form-label">Correo</label>
+                        <label class="form-label" data-i18n="form.email">Correo</label>
                         <input type="email" class="form-control" name="correo" required>
                       </div>
                       <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
+                        <label class="form-label" data-i18n="form.password">Contraseña</label>
                         <input type="password" class="form-control" name="contrasena" required>
                       </div>
-                      <button type="submit" class="btn btn-success">Registrarse</button>
+                      <button type="submit" class="btn btn-success" data-i18n="btn.register">Registrarse</button>
                     </form>
                   </div>
 
                   <div class="tab-pane fade" id="login" role="tabpanel">
                     <form action="BackEnd/login.php" method="POST">
+                      <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($__csrf); ?>">
                       <div class="mb-3">
-                        <label class="form-label">Correo</label>
+                        <label class="form-label" data-i18n="form.email">Correo</label>
                         <input type="email" class="form-control" name="correo" required>
                       </div>
                       <div class="mb-3">
-                        <label class="form-label">Contraseña</label>
+                        <label class="form-label" data-i18n="form.password">Contraseña</label>
                         <input type="password" class="form-control" name="contrasena" required>
                       </div>
-                      <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+                      <?php if ($__captcha_question): ?>
+                        <div class="mb-3">
+                          <label class="form-label">Captcha: <?php echo htmlspecialchars($__captcha_question); ?></label>
+                          <input type="text" class="form-control" name="captcha" required>
+                        </div>
+                      <?php endif; ?>
+                      <button type="submit" class="btn btn-primary" data-i18n="btn.login">Iniciar sesión</button>
                     </form>
                   </div>
                 </div>
@@ -187,44 +212,41 @@ if ($conn->connect_error) {
     <div class="carousel-item active">
       <img src="Otros/fotos/drafto.jpg" class="d-block w-100" alt="...">
       <div class="carousel-caption d-none d-md-block">
-        <h5 class="bg-warning text-dark p-2">¡Bienvenido a Draftosaurus!</h5>
-        <p class="bg-success bg-opacity-50 text-white p-3 rounded">El juego más divertido de dinosaurios.</p>
+  <h5 class="bg-warning text-dark p-2" data-i18n="carousel.slide1.title">¡Bienvenido a Draftosaurus!</h5>
+  <p class="bg-success bg-opacity-50 text-white p-3 rounded" data-i18n="carousel.slide1.desc">El juego más divertido de dinosaurios.</p>
       </div>
     </div>
     <div class="carousel-item">
       <img src="Otros/fotos/tablerocarousel.jpg" class="d-block w-100" alt="...">
       <div class="carousel-caption d-none d-md-block">
-        <h5 class="bg-warning text-dark p-2">¡Conoce del juego!</h5>
-       <p class="bg-success bg-opacity-50 text-white p-3 rounded">Tu objetivo en Draftosaurus es crear el parque de dinosaurios que atraiga a la mayor cantidad de visitantes.
-Para ello, tienes que seleccionar e intercambiar dinosaurios, y colocarlos en recintos que tienen algunas restricciones de colocación.
-Cada turno, uno de los jugadores lanza el dado, lo cual limita en qué recintos pueden colocar sus dinosaurios el resto de jugadores.
-Draftosaurus es un juego de selección e intercambio rápido y ligero en el que no tienes una mano de cartas que pasar (después de seleccionar una), sino un montón de dinosaurios en la palma de tu mano.</p>
+  <h5 class="bg-warning text-dark p-2" data-i18n="carousel.slide2.title">¡Conoce del juego!</h5>
+       <p class="bg-success bg-opacity-50 text-white p-3 rounded" data-i18n="carousel.slide2.desc" data-i18n-html>Tu objetivo en Draftosaurus es crear el parque de dinosaurios que atraiga a la mayor cantidad de visitantes.<br>Para ello, tienes que seleccionar e intercambiar dinosaurios, y colocarlos en recintos que tienen algunas restricciones de colocación.<br>Cada turno, uno de los jugadores lanza el dado, lo cual limita en qué recintos pueden colocar sus dinosaurios el resto de jugadores.<br>Draftosaurus es un juego de selección e intercambio rápido y ligero en el que no tienes una mano de cartas que pasar (después de seleccionar una), sino un montón de dinosaurios en la palma de tu mano.</p>
       </div>
     </div>
     <div class="carousel-item">
       <img src="Otros/fotos/draftosaurus_detalle_tirano.webp" class="d-block w-100" alt="...">
       <div class="carousel-caption d-none d-md-block">
-        <h5 class="bg-warning text-dark p-2">Detalles del juego</h5>
-        <p class="bg-success bg-opacity-50 text-white p-3 rounded">Desarrollado por Antoine Bauza, Corentin Lebrat, Ludovic Maublanc, Theo Riviere</p>
-        <p class="bg-success bg-opacity-50 text-white p-3 rounded">Ilustrado por Jiahui Eva Gao, Roman Kucharski, Vipin Alex Jacob</p>
+  <h5 class="bg-warning text-dark p-2" data-i18n="carousel.slide3.title">Detalles del juego</h5>
+  <p class="bg-success bg-opacity-50 text-white p-3 rounded" data-i18n="carousel.slide3.desc1">Desarrollado por Antoine Bauza, Corentin Lebrat, Ludovic Maublanc, Theo Riviere</p>
+  <p class="bg-success bg-opacity-50 text-white p-3 rounded" data-i18n="carousel.slide3.desc2">Ilustrado por Jiahui Eva Gao, Roman Kucharski, Vipin Alex Jacob</p>
         
       </div>
     </div>
   </div>
   <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
+    <span class="visually-hidden" data-i18n="carousel.prev">Previous</span>
   </button>
   <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
     <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
+    <span class="visually-hidden" data-i18n="carousel.next">Next</span>
   </button>
 </div>
 
 <!-- botones -->
 <div class="container d-flex justify-content-center gap-3 mt-5">
-  <button type="button" class="btn btn-danger btn-lg" onclick="window.location.href='FrontEnd/creaJuego.php'">Jugar</button>
-  <button type="button" class="btn btn-primary btn-lg" onclick="window.location.href='FrontEnd/puntaje.php'">Puntuación</button>  
+  <button type="button" class="btn btn-danger btn-lg" onclick="window.location.href='FrontEnd/creaJuego.php'" data-i18n="buttons.play">Jugar</button>
+  <button type="button" class="btn btn-primary btn-lg" onclick="window.location.href='FrontEnd/puntaje.php'" data-i18n="buttons.score">Puntuación</button>  
 </div>
 
 <!-- Datos -->
@@ -232,11 +254,11 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
     <div class="row">
       <div class="col-sm-7 py-4 px-3 col-12"> 
         <h4 class="text-success text-center fw-bold">LUDICA STUDIOS</h5>  
-         <p class="pt-3 px-4 fs-5">Ludica Studios trabaja para que los mejores juegos de mesa estén a tu alcance, ¡Sin instalaciones y sin gastos!</p>
+         <p class="pt-3 px-4 fs-5" data-i18n="datos.text">Ludica Studios trabaja para que los mejores juegos de mesa estén a tu alcance, ¡Sin instalaciones y sin gastos!</p>
       </div>
       <div class="col-sm-5 py-4 px-3 col-12"> 
         <p class="text-center"><img src="Otros/fotos/Logo_color.png" class="rounded" alt="Ejemplo"></p>
-        <p class="text-center"><button type="button" class="btn btn-outline-success" onclick="window.location.href='FrontEnd/ludica.php'">¡Visita nuestra web!</button></p>
+  <p class="text-center"><button type="button" class="btn btn-outline-success" onclick="window.location.href='FrontEnd/ludica.php'" data-i18n="buttons.visitWeb">¡Visita nuestra web!</button></p>
       </div>
     </div>
   </div>
@@ -258,94 +280,94 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
     <div class="col-sm-6 col-12">
       <div class="p-3 border bg-light border-3 border-secondary">
         <div class="d-grid gap-2">
-          <a href="Otros/descargas/instruccionesE.pdf" download class="btn btn-danger" type="button">Descargar PDF con instrucciones en español</a>
-          <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#modalSumario">Sumario</button>
+          <a href="Otros/descargas/instruccionesE.pdf" download class="btn btn-danger" type="button" data-i18n="buttons.download.es">Descargar PDF con instrucciones en español</a>
+          <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#modalSumario" data-i18n="buttons.summary">Sumario</button>
           <!-- MODAL DEL SUMARIO -->
           <div class="modal fade" id="modalSumario" tabindex="-1" aria-labelledby="modalSumarioLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
       <div class="modal-header">
-        <h5 class="modal-title" id="modalSumarioLabel">Sumario</h5>
+  <h5 class="modal-title" id="modalSumarioLabel" data-i18n="modal.summary.title">Sumario</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body">
-        <p class="fw-bold">Objetivo</p>
-        <p>Elije dinosaurios y colócalos en diferentes zonas para conseguir el mayor número de puntos.</p>
-        <p class="fw-bold">Jugabilidad</p>
-        <p>Se elige el lado del tablero: verano (nivel inicial) o invierno (nivel experto)
-         <br> El juego consta de 2 rondas (4 para 2 jugadores)
-          Cada jugador saca 6 dinosaurios de la bolsa.
-        <br>  El jugador con el dado de colocación lo lanza.
-        <br>  Cada jugador elige un dinosaurio y lo coloca en su zoo al mismo tiempo, siguiendo las reglas del dado de colocación (excepto el rodillo, que puede colocarse en cualquier lugar).
-        <br>  A continuación, cada jugador descarta uno de los dinosaurios restantes (puedes imaginar que lo han prestado a un zoológico de mascotas en el extranjero)
-         <br> Cada jugador pasa su bolsa de dinosaurios y su dado de colocación (si lo tenía) a su izquierda.
-         <br> Repite hasta que todos los dinosaurios estén colocados.
-         <br> Después de 2 rondas, se procede a la puntuación.
-         <br> Al final del juego habrán colocado 12 dinosaurios: 6 en la ronda 1, 6 en la ronda 2.
-         <br> En caso de empate, gana el jugador que tenga menos T-Rex. Si siguen empatados, los jugadores se reparten la victoria.
-         <br> Hay 6 especies de dinosaurios, distribuidos de la siguiente manera:
-         <br> 5p: 60 dinos. 10 x 6 especies diferentes
-         <br> 4p: 48 dinos. 8 x 6 especies diferentes
-        <br> 3p: 36 dinos. 6 x 6 especies diferentes
-          <br> 2p: 48 dinos. 8 x 6 especies diferentes</p>
-          <p class="fw-bold">Dado de colocación</p>
-        <p>Pastizales/bosques: Debes colocar el dinosaurio en una zona de pradera(marrón)/bosque(verde).
-           <br> Patio de comidas/Café: Debes colocar el dinosaurio en un área a la izquierda/derecha.
-            <br>Corral vacío: Debes colocar al dinosaurio en un corral vacío.
-           <br> Cuidado con el T-Rex: Debes colocar al dinosaurio en un corral sin T-Rex (rojo).</p>
-           <p class="fw-bold">Tablero</p>
-        <p>Cada zoológico tiene 6 corrales y un río.
-           <br>Río: No se trata como un corral. Cada dinosaurio en él proporciona 1 punto.
-           <br>T-Rex: Cada corral con al menos 1 T-Rex en él aporta 1 punto extra.</p>
+      <p class="fw-bold" data-i18n="modal.summary.objectiveTitle">Objetivo</p>
+      <p data-i18n="modal.summary.objectiveDesc">Elije dinosaurios y colócalos en diferentes zonas para conseguir el mayor número de puntos.</p>
+      <p class="fw-bold" data-i18n="modal.summary.gameplayTitle">Jugabilidad</p>
+      <p data-i18n="modal.summary.gameplayDesc" data-i18n-html>Se elige el lado del tablero: verano (nivel inicial) o invierno (nivel experto)
+      <br> El juego consta de 2 rondas (4 para 2 jugadores)
+       Cada jugador saca 6 dinosaurios de la bolsa.
+      <br>  El jugador con el dado de colocación lo lanza.
+      <br>  Cada jugador elige un dinosaurio y lo coloca en su zoo al mismo tiempo, siguiendo las reglas del dado de colocación (excepto el rodillo, que puede colocarse en cualquier lugar).
+      <br>  A continuación, cada jugador descarta uno de los dinosaurios restantes (puedes imaginar que lo han prestado a un zoológico de mascotas en el extranjero)
+      <br> Cada jugador pasa su bolsa de dinosaurios y su dado de colocación (si lo tenía) a su izquierda.
+      <br> Repite hasta que todos los dinosaurios estén colocados.
+      <br> Después de 2 rondas, se procede a la puntuación.
+      <br> Al final del juego habrán colocado 12 dinosaurios: 6 en la ronda 1, 6 en la ronda 2.
+      <br> En caso de empate, gana el jugador que tenga menos T-Rex. Si siguen empatados, los jugadores se reparten la victoria.
+      <br> Hay 6 especies de dinosaurios, distribuidos de la siguiente manera:
+      <br> 5p: 60 dinos. 10 x 6 especies diferentes
+      <br> 4p: 48 dinos. 8 x 6 especies diferentes
+      <br> 3p: 36 dinos. 6 x 6 especies diferentes
+       <br> 2p: 48 dinos. 8 x 6 especies diferentes</p>
+       <p class="fw-bold" data-i18n="modal.summary.dieTitle">Dado de colocación</p>
+      <p data-i18n="modal.summary.dieDesc" data-i18n-html>Pastizales/bosques: Debes colocar el dinosaurio en una zona de pradera(marrón)/bosque(verde).
+        <br> Patio de comidas/Café: Debes colocar el dinosaurio en un área a la izquierda/derecha.
+        <br>Corral vacío: Debes colocar al dinosaurio en un corral vacío.
+        <br> Cuidado con el T-Rex: Debes colocar al dinosaurio en un corral sin T-Rex (rojo).</p>
+        <p class="fw-bold" data-i18n="modal.summary.boardTitle">Tablero</p>
+      <p data-i18n="modal.summary.boardDesc" data-i18n-html>Cada zoológico tiene 6 corrales y un río.
+        <br>Río: No se trata como un corral. Cada dinosaurio en él proporciona 1 punto.
+        <br>T-Rex: Cada corral con al menos 1 T-Rex en él aporta 1 punto extra.</p>
           
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="common.close">Cerrar</button>
       </div>
 
     </div>
   </div>
 </div>
         <!-- END -->
-          <a href="Otros/descargas/instruccionesI.pdf" download class="btn btn-primary" type="button">Descargar PDF con instrucciones en inglés</a>
+          <a href="Otros/descargas/instruccionesI.pdf" download class="btn btn-primary" type="button" data-i18n="buttons.download.en">Descargar PDF con instrucciones en inglés</a>
         </div>
 
        <!-- ACORDEON -->
         <div class="accordion" id="accordionExample">
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" data-i18n="accordion.one.title">
         Objetivo
       </buton>
     </h2>
     <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
-      <div class="accordion-body">
+      <div class="accordion-body" data-i18n="accordion.one.body" data-i18n-html>
         <strong>En Draftosaurus,</strong> Eligir dinosaurios y colocarlos en diferentes zonas para conseguir el mayor número de puntos es la clave de la victoria.
       </div>
     </div>
   </div>
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" data-i18n="accordion.two.title">
         Dinosaurios
       </button>
     </h2>
     <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-      <div class="accordion-body">
+      <div class="accordion-body" data-i18n="accordion.two.body" data-i18n-html>
         <strong>Hay 6 tipos diferentes de dinosaurios.</strong> Dependiendo de la cantidad de jugadores, se aumenta o resta el numero de dinosaurios que existiran dentro de la bolsa.
       </div>
     </div>
   </div>
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" data-i18n="accordion.three.title">
         Las zonas del zoo y el dado de colocación
       </button>
     </h2>
     <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-      <div class="accordion-body">
+      <div class="accordion-body" data-i18n="accordion.three.body" data-i18n-html>
         <strong>Son la clave para aumentar los puntos.</strong> Factores como la cantidad de T-Rex, la zona que habilite el dado y el dinosaurio que tengas disponible para colocar, permitirán al jugador alcanzar la mayor cantidad de puntos posibles.
       </div>
     </div>
@@ -370,24 +392,24 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
 
         </a>
         <ul class="list-unstyled small text-muted">
-          <li class="mb-2">Diseñado y construido con todo el esfuerzo de nuestro <a href="FrontEnd/ludica.php">equipo</a> y con la ayuda de nuestros <a href="https://chatgpt.com"> contribuidores</a>.</li>
-          <li class="mb-2">Actualmente v1.0.0.</li>
-          <li class="mb-2">Actualizado por <a href="https://github.com/sebarosales5" target="_blank" rel="noopener">sebarosales5</a>.</li>
+          <li class="mb-2" data-i18n="footer.brand.designed" data-i18n-html>Diseñado y construido con todo el esfuerzo de nuestro <a href="FrontEnd/ludica.php">equipo</a> y con la ayuda de nuestros <a href="https://chatgpt.com"> contribuidores</a>.</li>
+          <li class="mb-2" data-i18n="footer.brand.version">Actualmente v1.0.0.</li>
+          <li class="mb-2" data-i18n="footer.brand.updatedBy" data-i18n-html>Actualizado por <a href="https://github.com/sebarosales5" target="_blank" rel="noopener">sebarosales5</a>.</li>
         </ul>
       </div>
       <div class="col-6 col-lg-4 offset-lg-1 mb-3">
-        <h5>Links</h5>
+        <h5 data-i18n="footer.links.title">Links</h5>
         <ul class="list-unstyled">
-          <li class="mb-2"><a href="FrontEnd/ludica.php">Página de LudicaStudios </a></li>
-          <li class="mb-2"><a href="https://github.com/sebarosales5">GitHub</a></li>
-          <li class="mb-2"><a href="https://www.instagram.com/ludicastudios4/">Instagram</a></li>
-          <li class="mb-2"><a href="https://x.com/LudicaStudios">Cuenta de X</a></li>
+          <li class="mb-2"><a href="FrontEnd/ludica.php" data-i18n="footer.links.ludica">Página de LudicaStudios </a></li>
+          <li class="mb-2"><a href="https://github.com/sebarosales5" data-i18n="footer.links.github">GitHub</a></li>
+          <li class="mb-2"><a href="https://www.instagram.com/ludicastudios4/" data-i18n="footer.links.instagram">Instagram</a></li>
+          <li class="mb-2"><a href="https://x.com/LudicaStudios" data-i18n="footer.links.x">Cuenta de X</a></li>
         </ul>
       </div>
       <div class="col-6 col-lg-4 mb-3">
         <h5>Ludica Studios</h5>
         <ul class="list-unstyled">
-          <li class="mb-2"><a href="FrontEnd/ludica.php">Pagina principal</a></li>
+          <li class="mb-2"><a href="FrontEnd/ludica.php" data-i18n="footer.ludica.main">Pagina principal</a></li>
  <!-- 
           <li class="mb-2"><a href="...">PlaceHolder</a></li>
           <li class="mb-2"><a href="...">PlaceHolder</a></li>
@@ -424,9 +446,10 @@ Draftosaurus es un juego de selección e intercambio rápido y ligero en el que 
     </div>
   </div>
 </footer>
-    <!--  Bootstrap Bundle with Popper -->
-    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="FrontEnd/index.js"></script>
+  <!--  Bootstrap Bundle with Popper -->
+  <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="FrontEnd/i18n.js"></script>
+  <script src="FrontEnd/index.js"></script>
     </body>
     
 </html>

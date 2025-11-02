@@ -26,25 +26,25 @@
             <div class="mapa" data-player-id="0">
               <img src="../Otros/fotos/Tablero_final.jpg" alt="Mapa zoológico calculadora" class="img-fluid">
               <div class="zona" id="player0-zona1">
-                <div class="zona-label">Pradera</div>
+                <div class="zona-label"><!--Pradera--></div>
               </div>
               <div class="zona" id="player0-zona2">
-                <div class="zona-label">Bosque</div>
+                <div class="zona-label"><!--Bosque--></div>
               </div>
               <div class="zona" id="player0-zona3">
-                <div class="zona-label">Río</div>
+                <div class="zona-label"><!--Río--></div>
               </div>
               <div class="zona" id="player0-zona4">
-                <div class="zona-label">Montaña</div>
+                <div class="zona-label"><!--Montaña--></div>
               </div>
               <div class="zona" id="player0-zona5">
-                <div class="zona-label">Desierto</div>
+                <div class="zona-label"><!--Desierto--></div>
               </div>
               <div class="zona" id="player0-zona6">
-                <div class="zona-label">Costa</div>
+                <div class="zona-label"><!--Costa--></div>
               </div>
               <div class="zona" id="player0-zona7">
-                <div class="zona-label">Lago</div>
+                <div class="zona-label"><!--Lago--></div>
               </div>
             </div>
           </div>
@@ -66,31 +66,31 @@
               <table class="table table-sm">
                 <tbody>
                   <tr>
-                    <td><strong>Pradera:</strong></td>
+                    <td><strong>Bosque de las Semejanzas:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-pradera">0</span> pts</td>
                   </tr>
                   <tr>
-                    <td><strong>Bosque:</strong></td>
+                    <td><strong>Isla Solitaria:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-bosque">0</span> pts</td>
                   </tr>
                   <tr>
-                    <td><strong>Río:</strong></td>
+                    <td><strong>Rey de la selva:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-rio">0</span> pts</td>
                   </tr>
                   <tr>
-                    <td><strong>Montaña:</strong></td>
+                    <td><strong>Trio Frondoso:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-montana">0</span> pts</td>
                   </tr>
                   <tr>
-                    <td><strong>Desierto:</strong></td>
+                    <td><strong>Pradera del amor:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-desierto">0</span> pts</td>
                   </tr>
                   <tr>
-                    <td><strong>Costa:</strong></td>
+                    <td><strong>Prado de la Diferencia:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-costa">0</span> pts</td>
                   </tr>
                   <tr>
-                    <td><strong>Lago:</strong></td>
+                    <td><strong>Rio:</strong></td>
                     <td class="text-end"><span id="player0-puntuacion-lago">0</span> pts</td>
                   </tr>
                   <tr class="table-success">
@@ -129,17 +129,17 @@
         <div class="row">
           <div class="col-md-6">
             <ul class="small">
-              <li><strong>Pradera:</strong> Puntos según el grupo más grande del mismo tipo (2, 4, 8, 12, 18, 24)</li>
-              <li><strong>Bosque:</strong> 7 puntos si la especie es única (no aparece en otras zonas)</li>
-              <li><strong>Río:</strong> 7 puntos si tenés la mayoría de esa especie comparado con otros jugadores</li>
-              <li><strong>Montaña:</strong> 7 puntos si tiene exactamente 3 dinosaurios</li>
+              <li><strong>Bosque de las Semejanzas:</strong> Puntos según el grupo más grande del mismo tipo (2, 4, 8, 12, 18, 24)</li>
+              <li><strong>Isla solitaria:</strong> 7 puntos si la especie es única (no aparece en otras zonas)</li>
+              <li><strong>Rey de la selva:</strong> 7 puntos si tenés la mayoría de esa especie comparado con otros jugadores</li>
+              <li><strong>Trio Frondoso:</strong> 7 puntos si tiene exactamente 3 dinosaurios</li>
             </ul>
           </div>
           <div class="col-md-6">
             <ul class="small">
-              <li><strong>Desierto:</strong> 5 puntos por cada pareja del mismo tipo</li>
-              <li><strong>Costa:</strong> Puntos según especies diferentes (1→1, 2→3, 3→6, 4→10, 5→15, 6→21)</li>
-              <li><strong>Lago:</strong> 1 punto por cada dinosaurio</li>
+              <li><strong>Pradera del Amor:</strong> 5 puntos por cada pareja del mismo tipo</li>
+              <li><strong>Prado de la diferencia:</strong> Puntos según especies diferentes (1→1, 2→3, 3→6, 4→10, 5→15, 6→21)</li>
+              <li><strong>Río:</strong> 1 punto por cada dinosaurio</li>
             </ul>
           </div>
         </div>

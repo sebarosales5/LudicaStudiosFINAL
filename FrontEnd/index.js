@@ -2,6 +2,21 @@
 // y mostrar toast de éxito si corresponde.
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize language
+  let lang = 'es';
+  try { lang = localStorage.getItem('lang') || 'es'; } catch(e) {}
+  if (window.__i18n && typeof window.__i18n.translatePage === 'function') {
+    window.__i18n.translatePage(lang);
+  }
+
+  // Toggle language button
+  const langToggle = document.getElementById('langToggle');
+  if (langToggle) {
+    langToggle.addEventListener('click', () => {
+      lang = (lang === 'es') ? 'en' : 'es';
+      if (window.__i18n) window.__i18n.translatePage(lang);
+    });
+  }
   // Mostrar toast de éxito si existe
   if (typeof showSuccessToast !== 'undefined' && showSuccessToast === true) {
     const toastElement = document.getElementById('successToast');

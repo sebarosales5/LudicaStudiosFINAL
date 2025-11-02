@@ -1,10 +1,11 @@
 <?php
 session_start();
 
-$host = 'mysql_db';
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
+
 
 $conn = new mysqli($host,$user,$pass,$db);
 if($conn->connect_error) die("Conexión fallida: ".$conn->connect_error);
@@ -16,6 +17,14 @@ $conn->set_charset('utf8mb4');
 $nombreRaw = isset($_POST['nombre']) ? $_POST['nombre'] : '';
 $correo = isset($_POST['correo']) ? $_POST['correo'] : '';
 $contrasena = isset($_POST['contrasena']) ? $_POST['contrasena'] : '';
+
+// CSRF check
+if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    $_SESSION['message'] = "Solicitud inválida. Refrescá la página e intentá nuevamente.";
+    $_SESSION['error_type'] = 'registro';
+    header("Location: ../index.php?error=1");
+    exit();
+}
 
 // Reglas de nombre: NO debe contener espacios ni ningún tipo de whitespace, ni caracteres no permitidos
 // Si el usuario ingresó cualquier whitespace (incluye espacios al inicio/fin), rechazamos
@@ -80,6 +89,10 @@ try {
     $stmt->bind_param("sss", $nombre, $correo, $contrasenaHash);
 
     if ($stmt->execute()) {
+        // Regenerar ID de sesión al crear cuenta para evitar fijación
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
         $_SESSION['usuario'] = [
             'id' => $conn->insert_id,
             'nombre' => $nombre,
@@ -88,7 +101,8 @@ try {
         $_SESSION['message'] = "Registro exitoso. Bienvenido " . $nombre;
             $_SESSION['success'] = true;
     } else {
-        $_SESSION['message'] = "Error al registrar: " . $stmt->error;
+        // Evitar filtrar errores internos específicos al usuario
+        $_SESSION['message'] = "Ocurrió un error al registrar. Intentalo nuevamente.";
         $_SESSION['error_type'] = 'registro';
         $stmt->close();
         $conn->close();
@@ -100,7 +114,8 @@ try {
         // Error de entrada duplicada (usuario ya existe)
         $_SESSION['message'] = "El nombre de usuario o correo ya está en uso.";
     } else {
-        $_SESSION['message'] = "Error inesperado: " . $e->getMessage();
+        // No exponer detalles técnicos en la UI
+        $_SESSION['message'] = "Error inesperado. Intentalo de nuevo más tarde.";
     }
     $_SESSION['error_type'] = 'registro';
     $stmt->close();

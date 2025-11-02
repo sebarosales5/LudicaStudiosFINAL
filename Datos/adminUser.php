@@ -7,10 +7,11 @@ if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['rol']) || $_SES
 }
 ?>
 <?php
-$host = 'mysql_db';
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
+
 
 $conn = new mysqli($host, $user, $pass, $db);
 if ($conn->connect_error) die("Conexión fallida: ".$conn->connect_error);

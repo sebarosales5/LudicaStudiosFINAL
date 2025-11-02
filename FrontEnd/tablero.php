@@ -60,25 +60,25 @@
                 <div class="mapa" data-player-id="<?php echo $index; ?>">
                   <img src="../Otros/fotos/Tablero_final.jpg" alt="Mapa zoológico de <?php echo htmlspecialchars($player); ?>" class="img-fluid">
                   <div class="zona" id="player<?php echo $index; ?>-zona1">
-                    <div class="zona-label">Pradera</div>
+                    <div class="zona-label"><!--Pradera--></div>
                   </div>
                   <div class="zona" id="player<?php echo $index; ?>-zona2">
-                    <div class="zona-label">Bosque</div>
+                    <div class="zona-label"><!--Bosque--></div>
                   </div>
                   <div class="zona" id="player<?php echo $index; ?>-zona3">
-                    <div class="zona-label">Río</div>
+                    <div class="zona-label"><!--Río--></div>
                   </div>
                   <div class="zona" id="player<?php echo $index; ?>-zona4">
-                    <div class="zona-label">Montaña</div>
+                    <div class="zona-label"><!--Montaña--></div>
                   </div>
                   <div class="zona" id="player<?php echo $index; ?>-zona5">
-                    <div class="zona-label">Desierto</div>
+                    <div class="zona-label"><!--Desierto--></div>
                   </div>
                   <div class="zona" id="player<?php echo $index; ?>-zona6">
-                    <div class="zona-label">Costa</div>
+                    <div class="zona-label"><!--Costa--></div>
                   </div>
                   <div class="zona" id="player<?php echo $index; ?>-zona7">
-                    <div class="zona-label">Lago</div>
+                    <div class="zona-label"><!--Lago--></div>
                   </div>
                 </div>
               </div>

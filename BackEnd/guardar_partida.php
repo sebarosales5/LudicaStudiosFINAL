@@ -3,10 +3,11 @@ session_start();
 header('Content-Type: application/json');
 
 // Configuración de base de datos
-$host = 'mysql_db';
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
+
 
 // Conexión a la base
 $conn = new mysqli($host, $user, $pass, $db);
