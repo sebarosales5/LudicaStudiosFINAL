@@ -7,10 +7,10 @@ if (!isset($_SESSION['usuario']) || !isset($_SESSION['usuario']['rol']) || $_SES
 }
 ?>
 <?php
-$host = 'db'; // o IP del servidor de BD
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
 
 
 $conn = new mysqli($host, $user, $pass, $db);

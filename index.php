@@ -15,10 +15,10 @@ if (!empty($_SESSION['require_captcha']) && $_SESSION['require_captcha'] === tru
 }
 ?>
 <?php
-$host = 'db'; // o IP del servidor de BD
+$host = 'localhost'; // o IP del servidor de BD
 $db = 'draftosaurio';
-$user = 'adminDB';
-$pass = '123';
+$user = 'root';
+$pass = '';
 
 $conn = new mysqli($host, $user, $pass, $db);
 
